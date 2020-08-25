@@ -9,49 +9,83 @@ const fs = require("fs");
 var app = express();
 var PORT = process.env.PORT || 3000;
 // Sets up the Express app to handle data parsing
+app.use(express.static(__dirname + "/public"));
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.get("/notes", function (req, res) {
     res.sendFile(path.join(__dirname, "/public/notes.html"));
 });
-app.get("*", function (req, res) {
+app.get("/", function (req, res) {
     res.sendFile(path.join(__dirname, "/public/index.html"));
 });
 app.get("/api/notes", function (req, res) {
-    return res.json(notes);
-});
-// Create New Characters - takes in JSON input
-app.post("/api/notes", function(req, res) {
-    // req.body hosts is equal to the JSON post sent from the user
-    // This works because of our body parsing middleware
-    var writeNote = req.body;
-    
-    console.log(writeNote);
-  
-    notes.push(writeNote);
+    console.log("get")
     fs.readFile("db/db.json",function(err,data){
-        const readNote = JSON.parse(data)
-        for (i in readNote){
-            console.log(readNote[i])
-            //
+        var readNote = JSON.parse(data)
+    res.json(readNote);
+});
+})
+
+app.delete("/api/notes/:id", function(req,res){
+    console.log(req.params.id)
+    fs.readFile("db/db.json",'utf8',function(err,data){
+        if (err){}
+        return err
+    })
+    const updated = [];
+    var noted = JSON.parse(data)
+
+    for (i in noted){
+        if (noted[i].id !== parseInt(req.body.index)){
+            updated.push(noted[i])
+        }
+    }
+    const rewrite = JSON.stringify(updated)
+    console.log(rewrite)
+    fs.writeFile("db/db.json",rewrite,function(err,data){
+        if (err){
+            return err;
         }
     })
 
-    res.json(notes);
+});
+app.post("/api/notes", function(req, res) {
+    console.log("post")
+    // req.body hosts is equal to the JSON post sent from the user
+    // This works because of our body parsing middleware
+    const notes = [];
+    var writeNote = req.body;
+    notes.push(writeNote);
+
+    var index = 0;
+    fs.readFile("db/db.json",'utf8',function(err,data){
+        if (err){
+            return err
+        }
+        const readNote = JSON.parse(data)
+        for (i in readNote){
+            readNote[i].id = i+1;
+            notes.push(readNote[i])
+        }
+        var readArr = JSON.stringify(notes)
+        fs.writeFile("db/db.json", readArr,function(err,data){
+            if (err){
+                return err
+            }
+        })
+        res.json(notes);
+
+    })
+
   });
 
-//   * DELETE `/api/notes/:id` - Should recieve a query paramter 
-//   containing the id of a note to delete. This means
-//    you'll need to find a way to give each note a 
-//    unique `id` when it's saved. In order to delete 
-//    a note, you'll need to read all notes from the 
-//    `db.json` file, remove the note with the given 
-//    `id` property, and then rewrite the notes to the
-//     `db.json` file.
-app.delete("/api/notes/:id", function(req,res){
 
-})
+
+
+
 app.listen(PORT, function() {
     console.log("App listening on PORT " + PORT);
   });
+

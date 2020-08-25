@@ -17,6 +17,7 @@ var getNotes = function() {
 
 // A function for saving a note to the db
 var saveNote = function(note) {
+  console.log("clicked")
   return $.ajax({
     url: "/api/notes",
     data: note,
