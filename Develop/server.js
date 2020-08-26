@@ -29,26 +29,32 @@ app.get("/api/notes", function (req, res) {
 })
 
 app.delete("/api/notes/:id", function(req,res){
-    console.log(req.params.id)
+    var getID = req.params.id
+    console.log("this is ID"+getID)
     fs.readFile("db/db.json",'utf8',function(err,data){
-        if (err){}
-        return err
-    })
-    const updated = [];
-    var noted = JSON.parse(data)
-
-    for (i in noted){
-        if (noted[i].id !== parseInt(req.body.index)){
-            updated.push(noted[i])
-        }
-    }
-    const rewrite = JSON.stringify(updated)
-    console.log(rewrite)
-    fs.writeFile("db/db.json",rewrite,function(err,data){
         if (err){
-            return err;
+            return err
         }
+        const updated = [];
+        var noted = JSON.parse(data)
+        console.log("each note", noted)
+        for (i in noted){
+            if (noted[i].id !== getID){
+                updated.push(noted[i])
+            }
+        }        
+        const rewrite = JSON.stringify(updated)
+        console.log("this is the updated " + rewrite)
+        fs.writeFile("db/db.json",rewrite,function(err,data){
+            if (err){
+                return err;
+            }
+        })
     })
+    res.redirect('/');
+
+ 
+    
 
 });
 app.post("/api/notes", function(req, res) {
@@ -57,6 +63,8 @@ app.post("/api/notes", function(req, res) {
     // This works because of our body parsing middleware
     const notes = [];
     var writeNote = req.body;
+    writeNote.id = '00'
+    console.log(writeNote)
     notes.push(writeNote);
 
     var index = 0;
@@ -68,6 +76,7 @@ app.post("/api/notes", function(req, res) {
         for (i in readNote){
             readNote[i].id = i+1;
             notes.push(readNote[i])
+            console.log(readNote[i])
         }
         var readArr = JSON.stringify(notes)
         fs.writeFile("db/db.json", readArr,function(err,data){
@@ -75,9 +84,11 @@ app.post("/api/notes", function(req, res) {
                 return err
             }
         })
+        console.log(notes)
         res.json(notes);
 
     })
+  
 
   });
 
